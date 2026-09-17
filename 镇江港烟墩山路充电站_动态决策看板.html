@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>镇江港烟墩山路充电站 · 动态决策看板（蓝色系统一版）</title>
+<style>
+:root{
+ --navy:#075985;--navy2:#0b4f71;--blue:#0f6aa3;--pale:#edf7fc;--pale2:#f7fbfd;
+ --green:#2e7d32;--greenbg:#edf7ee;--amber:#256789;--amberbg:#eaf5fb;
+ --red:#b42318;--redbg:#fff0ef;--ink:#17212b;--muted:#64727d;--line:#d9e2e8;
+ --white:#fff;--shadow:0 1px 2px rgba(15,23,42,.04),0 7px 20px rgba(15,23,42,.05)
+}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7f9;color:var(--ink);font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",Arial,sans-serif}
+button,input,select{font:inherit}
+header{background:linear-gradient(135deg,#064e6c,#0a6d91);color:#fff;padding:22px 28px 18px}
+header h1{margin:0 0 7px;font-size:25px} header p{margin:0;color:#d8eef7;font-size:13px}
+.shell{max-width:1600px;margin:0 auto;padding:18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab,.btn{border:1px solid #b9cbd4;background:#fff;color:#285467;padding:10px 14px;border-radius:9px;cursor:pointer;font-weight:700}
+.tab.active,.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}.panel{display:none}.panel.active{display:block}
+.section{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow)}
+.section-title{background:var(--navy);color:#fff;padding:12px 16px;font-weight:800;font-size:15px}
+.section-sub{background:var(--pale);padding:10px 16px;color:#3f5966;font-size:12px;border-bottom:1px solid var(--line);line-height:1.65}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.controls{padding:14px 16px}.control{min-width:0}.control label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:5px}
+.control input,.control select{width:100%;min-height:40px;border:1px solid #bdcbd3;border-radius:8px;padding:9px 10px;background:#fff}
+.control input:focus,.control select:focus{outline:2px solid #86b9cf;outline-offset:1px}.hint{font-size:11px;color:var(--muted);margin-top:4px}
+.input-accent{background:#eaf5fb!important;color:#075985!important;font-weight:700;border-color:#9fc6d8!important}
+.table-wrap{overflow:auto;padding:0 14px 14px}table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+th{background:#dcecf4;color:#20343e;border:1px solid #cbd9e0;padding:8px 7px;text-align:center;white-space:nowrap}
+td{border:1px solid #dce4e8;padding:7px;text-align:right;white-space:nowrap}td:first-child,th:first-child{text-align:left}
+.table-input{width:76px!important;min-height:31px!important;padding:5px 6px!important;border:1px solid #c4d0d7;border-radius:6px;text-align:right}
+.season-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:14px}
+.season-card{border:1px solid var(--line);border-radius:10px;overflow:hidden}.season-head{padding:10px 12px;background:#e6f2f7;color:#234b5c;font-weight:800;display:flex;justify-content:space-between;gap:10px}.season-head small{font-weight:400;color:var(--muted)}
+.summary-bar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:14px}
+.summary-item{background:var(--pale2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}.summary-item b{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}.summary-item span{font-size:17px;font-weight:800;color:var(--navy2)}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;padding:14px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff;min-width:0}.kpi .lab{font-size:11px;color:var(--muted);font-weight:700}.kpi .val{font-size:21px;color:var(--navy2);font-weight:800;margin-top:7px;word-break:break-word}.kpi .note{font-size:10px;color:var(--muted);margin-top:5px}
+.kpi.good .val{color:var(--green)}.kpi.warn .val{color:var(--amber)}.kpi.bad .val{color:var(--red)}
+.callout{margin:0 14px 14px;padding:12px 14px;border:1px solid #b8d7e5;background:#eef8fc;border-radius:9px;color:#285467;font-size:12px;line-height:1.75}
+.info{margin:14px;padding:12px 14px;border:1px solid #cfe0e7;background:#f4fafc;border-radius:9px;color:#345662;font-size:12px;line-height:1.7}
+td.good{background:var(--greenbg);color:var(--green);font-weight:700}td.warn{background:var(--amberbg);color:var(--amber);font-weight:700}td.bad{background:var(--redbg);color:var(--red);font-weight:700}tr.base-row td{background:#e6f3f9;font-weight:700}
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:14px}.chart-card{border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}.chart-title{font-size:13px;font-weight:800;color:#263c46;margin:2px 4px 9px}
+svg.chart{display:block;width:100%;height:auto}.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:7px 4px}.legend span::before{content:"";display:inline-block;width:10px;height:3px;background:var(--c);vertical-align:middle;margin-right:5px;border-radius:2px}
+.switchline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.switchline input[type=checkbox]{width:18px;height:18px}.switchline label{font-size:12px;font-weight:700}
+.auto{padding:14px 17px;line-height:1.85;font-size:13px}.auto strong{color:var(--navy2)}
+details{border-top:1px solid var(--line)}details summary{cursor:pointer;padding:11px 16px;background:#f7fafc;font-weight:800;color:#355665;font-size:12px}details[open] summary{border-bottom:1px solid var(--line)}
+.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#e7f3f8;color:#14556f;font-size:10px;font-weight:800}.pill.good{background:var(--greenbg);color:var(--green)}.pill.warn{background:var(--amberbg);color:var(--amber)}.pill.bad{background:var(--redbg);color:var(--red)}
+.rank-list{padding:0 14px 14px}.rank-item{display:grid;grid-template-columns:170px 1fr 90px;gap:10px;align-items:center;margin:8px 0}.rank-bar{height:10px;border-radius:999px;background:#e9eff2;overflow:hidden}.rank-bar span{display:block;height:100%;background:#5b8fa8;border-radius:999px}.rank-val{text-align:right;font-size:12px;font-weight:800;color:#335566}
+.foot{text-align:center;color:#73818a;font-size:11px;padding:10px 0 24px}
+@media(max-width:1150px){.kpis,.summary-bar{grid-template-columns:repeat(3,1fr)}.g4,.g5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){header{padding:18px}.shell{padding:10px}.season-grid,.g2,.g3,.g4,.g5,.chart-grid{grid-template-columns:1fr}.kpis,.summary-bar{grid-template-columns:repeat(2,1fr)}.actions{width:100%;margin-left:0}.actions .btn{flex:1}.tab{flex:1}.rank-item{grid-template-columns:120px 1fr 70px}}
+@media print{body{background:#fff}.tabs,.actions,.btn{display:none!important}.panel{display:block!important}.section{box-shadow:none;break-inside:avoid}}
+
+.pricing-page{background:#f3f9fc}
+.pricing-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:14px 16px;background:#edf7fc;border-bottom:1px solid #cfe2ec}
+.pricing-season{background:#ffffff;border:1px solid #c8dee9;border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.pricing-season .season-head{background:#eaf5fb;border-bottom:1px solid #cfe2ec;padding:14px 16px;font-size:15px;color:#174a61}
+.pricing-season .season-head span{position:relative;padding-left:12px}
+.pricing-season .season-head span:before{content:"";position:absolute;left:0;top:3px;width:4px;height:18px;border-radius:99px;background:#0f6aa3}
+.pricing-table th{background:#dcecf4;font-weight:800;color:#20343e}
+.pricing-table td{background:#ffffff}
+.pricing-table tr.footer-row td{background:#e6f3f9;font-weight:800;color:#174a61}
+.slot-input{width:100%!important;min-width:260px;min-height:31px!important;padding:5px 8px!important;border:1px solid #b9d2df;border-radius:6px;background:#fafdff}
+.input-soft{background:#fff!important;color:#374151!important;font-weight:500}
+.pricing-summary-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;padding:14px}
+.note-card{background:#eef8fc;border:1px solid #b8d7e5;border-radius:12px;padding:14px 16px;color:#285467;line-height:1.8;font-size:12px}
+.note-card h4,.summary-card h4{margin:0 0 10px;font-size:14px;color:#385b4a}
+.summary-card{background:#fff;border:1px solid #c8dee9;border-radius:12px;padding:14px 16px}
+.mini-table{width:100%;border-collapse:collapse;font-size:12px}
+.mini-table th,.mini-table td{border:1px solid #ddd9cf;padding:8px 10px}
+.mini-table th{background:#dcecf4;color:#20343e}
+.mini-table tr:last-child td{background:#e6f3f9;font-weight:800;color:#174a61}
+.kpi-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:0 14px 14px}
+.kpi-chip{background:#fff;border:1px solid #c8dee9;border-radius:10px;padding:10px 12px}
+.kpi-chip b{display:block;font-size:11px;color:#6b7280;margin-bottom:5px}
+.kpi-chip span{font-size:16px;font-weight:800;color:#285467}
+@media(max-width:1000px){.pricing-summary-grid,.pricing-toolbar,.kpi-strip{grid-template-columns:1fr}.slot-input{min-width:180px}}
+
+
+.balance-grid{display:grid;grid-template-columns:1.05fr 1.25fr;gap:14px;padding:14px}
+.balance-note{margin:0;padding:14px 16px;border:1px solid #b8d7e5;background:#eef8fc;border-radius:12px;color:#285467;font-size:13px;line-height:1.8}
+.balance-note h4{margin:0 0 10px;color:#174a61;font-size:15px}
+.balance-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.balance-metrics .item{background:#fff;border:1px solid #c8dee9;border-radius:10px;padding:10px 12px}
+.balance-metrics .item b{display:block;font-size:11px;color:#6b7280;margin-bottom:4px}
+.balance-metrics .item span{font-size:17px;font-weight:800;color:#0f6aa3}
+@media(max-width:1000px){.balance-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<header>
+ <h1>镇江港烟墩山路充电站 · 投资收益与收费定价动态看板</h1>
+ <p>2027–2035 · 双季分时电价 · 年度车辆替代 · 社会车辆 · 两部制电费 · 经济性 · 敏感性实时联动</p>
+</header>
+<main class="shell">
+ <div class="tabs">
+  <button class="tab active" data-tab="pricing">1 · 双季分时电价</button>
+  <button class="tab" data-tab="demand">2 · 车辆与需求</button>
+  <button class="tab" data-tab="economics">3 · 综合经济性</button>
+  <button class="tab" data-tab="sensitivity">4 · 敏感性分析</button>
+  <div class="actions">
+   <button class="btn" id="exportBtn">导出方案</button>
+   <label class="btn">导入方案<input id="importFile" type="file" accept=".json,application/json" hidden></label>
+   <button class="btn" id="resetBtn">恢复模型基准</button>
+   <button class="btn primary" id="printBtn">打印 / PDF</button>
+  </div>
+ </div>
+
+ <!-- 1 Pricing -->
+ 
+<section id="pricing" class="panel active pricing-page">
+  <div class="section">
+   <div class="section-title">双季分时电价结构与收费定价</div>
+   <div class="section-sub">参考你提供的网页结构，分时电价界面已改为更接近“看板式+表格式”的展示方式：<b>时段名称、具体时段、基础电价、电量占比、收费定价、含损耗购电成本、单度毛利</b>全部在同一表中展示，并保留双季节独立编辑与全年加权汇总。</div>
+
+   <div class="pricing-toolbar">
+    <div class="control"><label>夏冬季全年权重</label><input id="swWeight" class="input-accent" type="number" min="0" max="1" step=".05"><div class="hint">默认 50%</div></div>
+    <div class="control"><label>春秋季全年权重</label><input id="ssWeight" class="input-accent" type="number" min="0" max="1" step=".05"><div class="hint">默认 50%</div></div>
+    <div class="control"><label>系统综合效率</label><input id="efficiencyInput" class="input-accent" type="number" min=".5" max="1" step=".01"><div class="hint">购电侧折算为车辆端成本</div></div>
+    <div class="control"><label>节假日深谷情景</label><div class="switchline"><input id="deepToggle" type="checkbox"><label for="deepToggle">启用深谷情景模拟</label></div><div class="hint">默认不计入基准</div></div>
+   </div>
+
+   <div id="deepControls" class="controls grid g3" style="display:none;background:#edf7fc;border-top:1px solid #cfe2ec">
+    <div class="control"><label>深谷基础电价（元/kWh）</label><input id="deepBase" class="input-accent" type="number" step=".0001" min="0"></div>
+    <div class="control"><label>深谷建议收费（元/kWh）</label><input id="deepCharge" class="input-accent" type="number" step=".01" min="0"></div>
+    <div class="control"><label>全年等效深谷占比</label><input id="deepShare" class="input-accent" type="number" step=".001" min="0" max=".2"></div>
+   </div>
+
+   <div class="season-grid">
+    <div class="pricing-season">
+      <div class="season-head"><span>夏冬两季（6-8月、12月-次年2月）· 分时电价与收费定价</span><small>6个月基准</small></div>
+      <div class="table-wrap" style="padding-top:12px">
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th>时段名称</th>
+              <th>具体时段</th>
+              <th>基础电价<br>(元/kWh)</th>
+              <th>电量占比<br>(%)</th>
+              <th>充电费定价<br>(元/kWh)</th>
+              <th>含线损购电成本<br>(元/kWh，自动)</th>
+              <th>单度毛利<br>(元/kWh，自动)</th>
+            </tr>
+          </thead>
+          <tbody id="swBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pricing-season">
+      <div class="season-head"><span>春秋两季（3-5月、9-11月）· 分时电价与收费定价</span><small>6个月基准</small></div>
+      <div class="table-wrap" style="padding-top:12px">
+        <table class="pricing-table">
+          <thead>
+            <tr>
+              <th>时段名称</th>
+              <th>具体时段</th>
+              <th>基础电价<br>(元/kWh)</th>
+              <th>电量占比<br>(%)</th>
+              <th>充电费定价<br>(元/kWh)</th>
+              <th>含线损购电成本<br>(元/kWh，自动)</th>
+              <th>单度毛利<br>(元/kWh，自动)</th>
+            </tr>
+          </thead>
+          <tbody id="ssBody"></tbody>
+        </table>
+      </div>
+    </div>
+   </div>
+
+   <div class="kpi-strip">
+    <div class="kpi-chip"><b>全年加权基础电价</b><span id="annualBase">—</span></div>
+    <div class="kpi-chip"><b>全年加权收费</b><span id="annualCharge">—</span></div>
+    <div class="kpi-chip"><b>含损耗购电成本</b><span id="annualPurchase">—</span></div>
+    <div class="kpi-chip"><b>单位毛差</b><span id="annualMargin">—</span></div>
+    <div class="kpi-chip"><b>两季权重合计</b><span id="weightTotal">—</span></div>
+   </div>
+
+   <div class="pricing-summary-grid">
+     <div class="note-card">
+       <h4>深谷时段备注</h4>
+       <div>参考网页逻辑，<b>春节、五一、国庆 10:00–14:00 深谷</b>（315kVA及以上工业执行）因天数少，默认<b>未计入基准测算</b>，如需评估可以通过上方“节假日深谷情景”单独启用。</div>
+       <div style="margin-top:8px">当前界面支持直接编辑<b>具体时段文本</b>。如后续取得供电公司正式分时电价文件，可直接按正式口径替换，不影响后续车辆、电量、经济性与敏感性联动。</div>
+     </div>
+     <div class="summary-card">
+       <h4>加权汇总（全年按两季各 6 个月平均，供后续界面调用）</h4>
+       <table class="mini-table">
+         <thead>
+           <tr><th>季节</th><th>加权购电价（元/kWh）</th><th>加权收费（元/kWh）</th><th>单位毛差（元/kWh）</th></tr>
+         </thead>
+         <tbody id="pricingSummaryBody"></tbody>
+       </table>
+     </div>
+   </div>
+  </div>
+</section>
+
+
+ <section id="demand" class="panel">
+  <div class="section">
+   <div class="section-title">车辆、社会车辆与运营参数</div>
+   <div class="controls grid g5">
+    <div class="control"><label>自卸车单车日充电量（kWh）</label><input id="dumpEnergy" class="input-accent" type="number" min="0" step="10"></div>
+    <div class="control"><label>牵引车单车日充电量（kWh）</label><input id="tractorEnergy" class="input-accent" type="number" min="0" step="10"></div>
+    <div class="control"><label>装载机单台日充电量（kWh）</label><input id="loaderEnergy" class="input-accent" type="number" min="0" step="10"></div>
+    <div class="control"><label>自卸车基准总量（台）</label><input id="dumpFleet" class="input-accent" type="number" min="1" step="1"></div>
+    <div class="control"><label>牵引车基准总量（台）</label><input id="tractorFleet" class="input-accent" type="number" min="1" step="1"></div>
+    <div class="control"><label>装载机基准总量（台）</label><input id="loaderFleet" class="input-accent" type="number" min="1" step="1"></div>
+    <div class="control"><label>充电装机功率（kW）</label><input id="installedInput" class="input-accent" type="number" min="100" step="100"></div>
+    <div class="control"><label>审慎能力系数</label><input id="prudentInput" class="input-accent" type="number" min=".5" max="1" step=".01"></div>
+    <div class="control"><label>建议需量安全余量</label><input id="safetyInput2" class="input-accent" type="number" min="0" max=".5" step=".01"></div>
+    <div class="control"><label>需量取整步长（kW）</label><input id="stepInput" class="input-accent" type="number" min="10" step="10"></div>
+   </div>
+   <div class="info"><b>社会车辆单车日均补能量已纳入年度参数表。</b>这比只设置一个全局100kWh/台·日更合理，可分别模拟不同年份社会车辆结构、车型和充电深度变化。</div>
+  </div>
+
+  <div class="section">
+   <div class="section-title">2027–2035 年度需求输入（全部可编辑）</div>
+   <div class="table-wrap" style="padding-top:14px"><table id="annualDemandInput"></table></div>
+  </div>
+
+  <div class="section">
+   <div class="section-title">车辆替代率、需求构成与容量</div>
+   <div class="chart-grid">
+    <div class="chart-card"><div class="chart-title">年度总需求 vs 2880kW审慎能力</div><svg id="demandChart" class="chart" viewBox="0 0 680 300"></svg><div class="legend"><span style="--c:#0f6aa3">总需求</span><span style="--c:#7a9cae">审慎能力</span></div></div>
+    <div class="chart-card"><div class="chart-title">三类车辆替代数量</div><svg id="vehicleChart" class="chart" viewBox="0 0 680 300"></svg><div class="legend"><span style="--c:#0f6aa3">自卸车</span><span style="--c:#6f8f54">牵引车</span><span style="--c:#b47d38">装载机</span></div></div>
+    <div class="chart-card"><div class="chart-title">年度充电需求构成</div><svg id="compositionChart" class="chart" viewBox="0 0 680 300"></svg><div class="legend"><span style="--c:#0f6aa3">自卸车</span><span style="--c:#6f8f54">牵引车</span><span style="--c:#b47d38">装载机</span><span style="--c:#7f7f7f">社会车辆</span></div></div>
+    <div class="chart-card"><div class="chart-title">建议正常需量 vs 装机功率</div><svg id="powerChart" class="chart" viewBox="0 0 680 300"></svg><div class="legend"><span style="--c:#0f6aa3">建议需量</span><span style="--c:#b42318">装机功率</span></div></div>
+   </div>
+   <div class="table-wrap"><table><thead><tr><th>年度</th><th>自卸替代率</th><th>牵引替代率</th><th>装载替代率</th><th>自有车辆电量</th><th>社会车辆电量</th><th>总需求</th><th>建议需量</th><th>容量利用率</th><th>状态</th></tr></thead><tbody id="demandSummaryBody"></tbody></table></div>
+  </div>
+ </section>
+
+ <!-- 3 Economics -->
+ <section id="economics" class="panel">
+  <div class="section">
+   <div class="section-title">综合经济性常用参数</div>
+   <div class="controls grid g4">
+    <div class="control"><label>分析年度</label><select id="yearSelect"></select></div>
+    <div class="control"><label>电量达成率</label><input id="attainmentInput" class="input-accent" type="number" min=".5" max="1.3" step=".01"></div>
+    <div class="control"><label>有效充电窗口（h/日）</label><input id="windowInput" class="input-accent" type="number" min="4" max="24" step="1"></div>
+    <div class="control"><label>综合收费调价（元/kWh）</label><input id="chargeAdjInput" class="input-accent" type="number" min="-.5" max=".8" step=".01"></div>
+    <div class="control"><label>容量费模式</label><select id="modeSelect" class="input-accent"><option value="fixedContract">固定约定需量</option><option value="maxDemand">最大需量</option><option value="fixedCapacity">固定容量</option></select></div>
+    <div class="control"><label>当前分析年合同需量（kW）</label><input id="selectedContractInput" class="input-accent" type="number" min="0" step="100"></div>
+    <div class="control"><label>固定容量（kVA）</label><input id="capacityInput" class="input-accent" type="number" min="0" step="50"></div>
+    <div class="control"><label>一期投资额（万元）</label><input id="investmentInput" class="input-accent" type="number" min="0" step="1"></div>
+   </div>
+   <details>
+    <summary>高级经济参数（通常保持模型默认值）</summary>
+    <div class="controls grid g4">
+     <div class="control"><label>最大需量电价（元/kW·月）</label><input id="demandRateInput" class="input-accent" type="number" min="0" step=".1"></div>
+     <div class="control"><label>固定容量电价（元/kVA·月）</label><input id="capacityRateInput" class="input-accent" type="number" min="0" step=".1"></div>
+     <div class="control"><label>所得税率</label><input id="taxInput" class="input-accent" type="number" min="0" max=".6" step=".01"></div>
+     <div class="control"><label>运营成本率（服务价差）</label><input id="opRateInput" class="input-accent" type="number" min="0" max=".5" step=".01"></div>
+     <div class="control"><label>年折旧（万元）</label><input id="deprInput" class="input-accent" type="number" min="0" step="1"></div>
+     <div class="control"><label>2029年起年运维费（万元）</label><input id="maintInput" class="input-accent" type="number" min="0" step="1"></div>
+    </div>
+   </details>
+  </div>
+
+  <div class="section">
+   <div class="section-title">年度容量费设置</div>
+   <div class="section-sub">与现有模型一致：2027–2030免容量费；固定约定需量基数2027–2029为1440kW，2030起为2880kW。均可逐年修改。</div>
+   <div class="table-wrap" style="padding-top:14px"><table id="capacitySettingTable"></table></div>
+  </div>
+
+  <div class="section"><div class="section-title">核心指标与风险灯</div><div class="kpis" id="kpiGrid"></div><div class="callout" id="capacityCheck">—</div></div>
+
+  <div class="section">
+   <div class="section-title">趋势图</div>
+   <div class="chart-grid">
+    <div class="chart-card"><div class="chart-title">营业收入、现金成本与税后利润</div><svg id="profitChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">累计项目现金流</div><svg id="cashChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">三种容量费模式（分析年度）</div><svg id="capacityChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">年度容量利用率</div><svg id="utilChart" class="chart" viewBox="0 0 680 300"></svg></div>
+   </div>
+  </div>
+
+  <div class="section"><div class="section-title">2027–2035 年度经济性明细</div><div class="table-wrap" style="padding-top:14px"><table><thead><tr><th>年度</th><th>需求电量</th><th>服务电量</th><th>满足率</th><th>建议需量</th><th>容量费</th><th>营业收入</th><th>购电成本</th><th>运维及运营</th><th>税后利润</th><th>经营现金流</th><th>累计现金流</th></tr></thead><tbody id="annualEconBody"></tbody></table></div></div>
+
+  <div class="grid g2">
+   <div class="section"><div class="section-title">双季分时收费汇总</div><div class="table-wrap" style="padding-top:14px"><table><thead><tr><th>季节</th><th>加权基础电价</th><th>加权收费</th><th>含损耗成本</th><th>单位毛差</th></tr></thead><tbody id="seasonSummaryBody"></tbody></table></div></div>
+   <div class="section"><div class="section-title">容量费三模式对比</div><div class="table-wrap" style="padding-top:14px"><table><thead><tr><th>方式</th><th>计费基数</th><th>年容量费</th><th>单位分摊</th><th>状态</th></tr></thead><tbody id="capacityBody"></tbody></table></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">容需均衡点提示与图</div>
+    <div class="section-sub">用于判断“最大需量计费”与“固定容量计费”何时发生优劣切换。均衡点按 <b>固定容量(kVA) × 固定容量电价 ÷ 最大需量电价</b> 计算；当预测最大需量低于均衡点时，通常最大需量模式更优；高于均衡点时，固定容量模式更优。</div>
+    <div class="balance-grid">
+      <div class="balance-note">
+        <h4>容需均衡点判断</h4>
+        <div id="balanceHint">—</div>
+        <div class="balance-metrics">
+          <div class="item"><b>容需均衡点</b><span id="balancePointMetric">—</span></div>
+          <div class="item"><b>当前分析年建议需量</b><span id="currentDemandMetric">—</span></div>
+          <div class="item"><b>当前需量与均衡点差值</b><span id="balanceGapMetric">—</span></div>
+          <div class="item"><b>均衡比例</b><span id="balanceRatioMetric">—</span></div>
+          <div class="item"><b>固定容量年容量费</b><span id="fixedCapacityFeeMetric">—</span></div>
+          <div class="item"><b>最大需量年容量费</b><span id="maxDemandFeeMetric">—</span></div>
+          <div class="item"><b>两模式容量费差额</b><span id="capacityFeeGapMetric">—</span></div>
+          <div class="item"><b>当前成本较优模式</b><span id="balanceBestModeMetric">—</span></div>
+        </div>
+      </div>
+      <div class="chart-card" style="margin:0">
+        <div class="chart-title">容需均衡图（分析年度）</div>
+        <svg id="balanceChart" class="chart" viewBox="0 0 680 320"></svg>
+        <div class="legend">
+          <span style="--c:#0f6aa3">最大需量模式年容量费</span>
+          <span style="--c:#2e7d32">固定容量模式年容量费</span>
+          <span style="--c:#b47d38">固定约定需量模式年容量费</span>
+          <span style="--c:#b42318">关键提示线</span>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>年度</th>
+          <th>建议正常需量（kW）</th>
+          <th>容需均衡点（kW）</th>
+          <th>与均衡点差值（kW）</th>
+          <th>最大需量年容量费（万元）</th>
+          <th>固定容量年容量费（万元）</th>
+          <th>容量费差额（万元）</th>
+          <th>判断</th>
+        </tr></thead>
+        <tbody id="balanceYearBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section"><div class="section-title">自动结构性结论</div><div class="auto" id="conclusion"></div></div>
+ </section>
+
+ <!-- 4 Sensitivity -->
+ <section id="sensitivity" class="panel">
+  <div class="section">
+   <div class="section-title">敏感性分析控制</div>
+   <div class="controls grid g4">
+    <div class="control"><label>敏感性分析年度</label><select id="sensYearSelect"></select></div>
+    <div class="control"><label>车辆数量变化范围</label><select id="vehRangeSelect" class="input-accent"><option value="2">±2台</option><option value="3" selected>±3台</option><option value="5">±5台</option></select></div>
+    <div class="control"><label>社会车辆数量上限</label><input id="socialMaxInput" class="input-accent" type="number" min="3" max="30" step="1"></div>
+    <div class="control"><label>社会车日均补能扫描范围</label><select id="socialEnergyRange" class="input-accent"><option value="20">±20kWh</option><option value="40" selected>±40kWh</option><option value="60">±60kWh</option></select></div>
+   </div>
+  </div>
+
+  <div class="section">
+   <div class="section-title">敏感因素强度排序</div>
+   <div class="section-sub">用“典型扰动造成的税后利润绝对变化”进行排序：收费±0.05元/kWh、窗口±2h、各类车辆+1台、社会车辆+1台。仅用于识别敏感度，不代表投资建议。</div>
+   <div class="rank-list" id="rankList"></div>
+  </div>
+
+  <div class="section">
+   <div class="section-title">选定年度敏感性曲线</div>
+   <div class="chart-grid">
+    <div class="chart-card"><div class="chart-title">综合收费敏感性</div><svg id="sensChargeChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">有效充电窗口敏感性</div><svg id="sensWindowChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">三类车辆替代数量敏感性</div><svg id="sensVehicleChart" class="chart" viewBox="0 0 680 300"></svg><div class="legend"><span style="--c:#0f6aa3">自卸车</span><span style="--c:#6f8f54">牵引车</span><span style="--c:#b47d38">装载机</span></div></div>
+    <div class="chart-card"><div class="chart-title">社会车辆数量敏感性</div><svg id="sensSocialCountChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">社会车辆单车日均补能量敏感性</div><svg id="sensSocialEnergyChart" class="chart" viewBox="0 0 680 300"></svg></div>
+    <div class="chart-card"><div class="chart-title">+1台车辆税后利润边际影响（分年）</div><svg id="annualMarginalChart" class="chart" viewBox="0 0 680 300"></svg><div class="legend"><span style="--c:#0f6aa3">自卸车</span><span style="--c:#6f8f54">牵引车</span><span style="--c:#b47d38">装载机</span><span style="--c:#7f7f7f">社会车辆</span></div></div>
+   </div>
+  </div>
+
+  <div class="grid g2">
+   <div class="section"><div class="section-title">三类车辆替代数量敏感性明细</div><div class="table-wrap" style="padding-top:14px"><table><thead><tr><th>类型</th><th>台数变化</th><th>情景台数</th><th>需求变化</th><th>建议需量</th><th>税后利润变化</th><th>状态</th></tr></thead><tbody id="vehSensBody"></tbody></table></div></div>
+   <div class="section"><div class="section-title">社会车辆敏感性明细</div><div class="table-wrap" style="padding-top:14px"><table><thead><tr><th>年均社会车辆</th><th>日均补能</th><th>总需求</th><th>建议需量</th><th>税后利润</th><th>利润变化</th></tr></thead><tbody id="socialSensBody"></tbody></table></div></div>
+  </div>
+
+  <div class="section"><div class="section-title">2027–2035 分年边际敏感性</div><div class="table-wrap" style="padding-top:14px"><table><thead><tr><th>年度</th><th>+1自卸车需求</th><th>利润影响</th><th>+1牵引车需求</th><th>利润影响</th><th>+1装载机需求</th><th>利润影响</th><th>+1社会车辆需求</th><th>利润影响</th></tr></thead><tbody id="annualMarginalBody"></tbody></table></div></div>
+  <div class="section"><div class="section-title">敏感性结构性结论</div><div class="auto" id="sensConclusion"></div></div>
+ </section>
+
+ <div class="foot">模型基准：方案一2880kW柔性充电堆；3150kVA固定容量；2027–2030容量费免除；一期投资375.04万元；暂不考虑光伏储能。</div>
+</main>
+
+<script>
+(function(){
+"use strict";
+const years=[2027,2028,2029,2030,2031,2032,2033,2034,2035];
+function summerWinterPeriods(){return [
+ {name:"尖峰",slot:"7-8月 14:00-15:00、19:30-21:30；12月-次年1月 18:00-20:00",base:1.1392,share:.05,charge:1.45},
+ {name:"峰",slot:"14:00-22:00",base:.9907,share:.10,charge:1.35},
+ {name:"平",slot:"6:00-11:00、13:00-14:00、22:00-24:00",base:.6607,share:.40,charge:1.10},
+ {name:"谷",slot:"0:00-6:00、11:00-13:00",base:.3927,share:.45,charge:.95}
+]}
+function springAutumnPeriods(){return [
+ {name:"尖峰",slot:"春秋无尖峰时段",base:1.1392,share:0,charge:1.45},
+ {name:"峰",slot:"15:00-22:00",base:.9907,share:.15,charge:1.35},
+ {name:"平",slot:"6:00-10:00、14:00-15:00、22:00-次日2:00",base:.6607,share:.40,charge:1.10},
+ {name:"谷",slot:"2:00-6:00、10:00-14:00",base:.3927,share:.45,charge:.95}
+]}
+const defaults={
+ sw:summerWinterPeriods(),ss:springAutumnPeriods(),swWeight:.5,ssWeight:.5,deep:false,deepBase:.3927,deepCharge:.95,deepShare:.005,
+ efficiency:.92,days:[330,330,330,330,330,330,330,330,330],dumpEnergy:200,tractorEnergy:140,loaderEnergy:640,
+ dumpFleet:56,tractorFleet:34,loaderFleet:35,
+ dump:[16,24,32,40,48,54,56,56,56],tractor:[6,9,12,15,18,22,26,30,34],loader:[2,5,7,9,11,14,17,20,23],
+ social:[3,3,3,3,3,3,3,3,3],socialDaily:[100,100,100,100,100,100,100,100,100],
+ installed:2880,prudent:.90,safety:.15,step:100,window:12,attainment:1,chargeAdj:0,
+ mode:"fixedContract",contract:[1440,1440,1440,2880,2880,2880,2880,2880,2880],exempt:[true,true,true,true,false,false,false,false,false],
+ fixedCapacity:3150,demandRate:51.2,capacityRate:32,tax:.25,opRate:.08,depreciation:375039.767248,maintenance:75007.9534496,investment:3750397.67248,
+ selectedYear:2031,sensYear:2031,vehRange:3,socialMax:10,socialEnergyRange:40
+};
+let state=loadLocal()||JSON.parse(JSON.stringify(defaults));
+const $=id=>document.getElementById(id);
+const fmt=(v,d=2)=>Number.isFinite(v)?v.toLocaleString("zh-CN",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
+const pct=(v,d=1)=>Number.isFinite(v)?(v*100).toFixed(d)+"%":"—";
+const clamp=(v,min,max,f)=>{v=Number(v);return Number.isFinite(v)?Math.min(max,Math.max(min,v)):f};
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function saveLocal(){try{localStorage.setItem("yzportDashboardV5",JSON.stringify(state))}catch(e){}}
+function loadLocal(){try{const x=localStorage.getItem("yzportDashboardV5");return x?{...JSON.parse(JSON.stringify(defaults)),...JSON.parse(x)}:null}catch(e){return null}}
+
+function ensurePeriodSchema(arr, kind){
+ const base = kind==="sw" ? summerWinterPeriods() : springAutumnPeriods();
+ if(!Array.isArray(arr) || !arr.length) return base;
+ return arr.map((p,i)=>({
+   name: p && p.name!=null ? p.name : base[i].name,
+   slot: p && p.slot!=null ? p.slot : base[i].slot,
+   base: p && Number.isFinite(+p.base) ? +p.base : base[i].base,
+   share: p && Number.isFinite(+p.share) ? +p.share : base[i].share,
+   charge: p && Number.isFinite(+p.charge) ? +p.charge : base[i].charge
+ }))
+}
+function normalizeStateSchema(){
+ state.sw = ensurePeriodSchema(state.sw,"sw");
+ state.ss = ensurePeriodSchema(state.ss,"ss");
+}
+
+function seasonCalc(ps){const sum=ps.reduce((a,p)=>a+Math.max(0,+p.share||0),0)||1;let base=0,charge=0;ps.forEach(p=>{const w=Math.max(0,+p.share||0)/sum;base+=(+p.base||0)*w;charge+=(+p.charge||0)*w});return{base,charge,sum}}
+function annualPricing(){const sw=seasonCalc(state.sw),ss=seasonCalc(state.ss);let a=Math.max(0,state.swWeight),b=Math.max(0,state.ssWeight),t=a+b||1;a/=t;b/=t;let base=sw.base*a+ss.base*b,charge=sw.charge*a+ss.charge*b;if(state.deep){const s=clamp(state.deepShare,0,.2,.005);base=base*(1-s)+state.deepBase*s;charge=charge*(1-s)+state.deepCharge*s}charge+=state.chargeAdj;return{sw,ss,base,charge,purchase:base/state.efficiency,margin:charge-base/state.efficiency,serviceSpread:charge-base,weightTotal:state.swWeight+state.ssWeight}}
+function components(i,override={}){
+ const days=override.days??state.days[i],dump=override.dump??state.dump[i],tractor=override.tractor??state.tractor[i],loader=override.loader??state.loader[i],social=override.social??state.social[i],socialDaily=override.socialDaily??state.socialDaily[i];
+ return{dump:dump*state.dumpEnergy*days,tractor:tractor*state.tractorEnergy*days,loader:loader*state.loaderEnergy*days,social:social*socialDaily*days}
+}
+function demandData(i,override={}){const c=components(i,override);return{year:years[i],...c,total:c.dump+c.tractor+c.loader+c.social,days:override.days??state.days[i]}}
+function suggestedDemand(kwh,i,windowOverride=null){const w=windowOverride??state.window,days=state.days[i];const theoretical=(kwh/state.efficiency)/(days*w);return Math.ceil(theoretical*(1+state.safety)/state.step)*state.step}
+function theoreticalCapacity(i,windowOverride=null){return state.installed*(windowOverride??state.window)*state.days[i]*state.efficiency}
+function capacityFee(i,suggested,mode=state.mode){if(state.exempt[i])return 0;if(mode==="maxDemand")return suggested*state.demandRate*12;if(mode==="fixedCapacity")return state.fixedCapacity*state.capacityRate*12;return state.contract[i]*state.demandRate*12}
+function calcScenario(i,override={}){
+ const d=demandData(i,override),p=annualPricing(),att=override.attainment??state.attainment,w=override.window??state.window,mode=override.mode??state.mode,charge=override.charge??p.charge;
+ const target=d.total*att,theo=theoreticalCapacity(i,w),prudent=theo*state.prudent,served=Math.min(target,prudent),suggested=suggestedDemand(served,i,w),fee=capacityFee(i,suggested,mode);
+ const grid=served/state.efficiency,purchase=grid*p.base,revenue=served*charge,service=Math.max(0,(charge-p.base)*served),op=service*state.opRate,maint=years[i]>=2029?state.maintenance:0;
+ const pre=revenue-purchase-fee-op-maint-state.depreciation,tax=Math.max(pre,0)*state.tax,after=pre-tax,operating=after+state.depreciation;
+ return{...d,target,theo,prudent,served,suggested,fee,grid,purchase,revenue,op,maint,pre,tax,after,operating,satisfaction:target?served/target:1,util:theo?served/theo:0,charge}
+}
+function calcAll(){let cum=0;return years.map((y,i)=>{const r=calcScenario(i),flow=r.operating-(i===0?state.investment:0);cum+=flow;return{...r,flow,cum}})}
+function irr(flows){const npv=r=>flows.reduce((s,v,i)=>s+v/Math.pow(1+r,i),0);let lo=-.99,hi=10,flo=npv(lo),fhi=npv(hi);if(!Number.isFinite(flo)||!Number.isFinite(fhi)||flo*fhi>0)return null;for(let k=0;k<180;k++){const mid=(lo+hi)/2,fm=npv(mid);if(Math.abs(fm)<1e-7)return mid;if(flo*fm<=0){hi=mid;fhi=fm}else{lo=mid;flo=fm}}return(lo+hi)/2}
+function payback(rows){for(let i=0;i<rows.length;i++)if(rows[i].cum>=0){if(i===0)return 0;return i+(-rows[i-1].cum/rows[i].operating)}return null}
+function breakEvenCharge(i){let lo=.2,hi=3;for(let k=0;k<90;k++){const mid=(lo+hi)/2;if(calcScenario(i,{charge:mid}).pre>0)hi=mid;else lo=mid}return(lo+hi)/2}
+function profitDelta(i,override){return(calcScenario(i,override).after-calcScenario(i).after)/1e4}
+function statusClass(v){return v<0?"bad":v===0?"":"good"}
+
+function lineChart(svg,series,cats,opt={}){
+ const W=680,H=300,m={l:58,r:18,t:23,b:42},pw=W-m.l-m.r,ph=H-m.t-m.b;let vals=[];series.forEach(s=>vals.push(...s.values.filter(Number.isFinite)));if(opt.zeroLine)vals.push(0);let min=Math.min(...vals),max=Math.max(...vals);if(min===max){min-=1;max+=1}const pad=(max-min)*.12||1;min-=pad;max+=pad;const x=i=>m.l+(cats.length<=1?pw/2:i*pw/(cats.length-1)),y=v=>m.t+(max-v)/(max-min)*ph;let h="";
+ for(let j=0;j<5;j++){const yy=m.t+j*ph/4,val=max-j*(max-min)/4;h+=`<line x1="${m.l}" x2="${m.l+pw}" y1="${yy}" y2="${yy}" stroke="#e4ebef"/><text x="${m.l-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#6b7a84">${fmt(val,opt.decimals??0)}</text>`}
+ cats.forEach((c,i)=>h+=`<text x="${x(i)}" y="${H-15}" text-anchor="middle" font-size="10" fill="#6b7a84">${esc(c)}</text>`);if(opt.zeroLine&&min<0&&max>0)h+=`<line x1="${m.l}" x2="${m.l+pw}" y1="${y(0)}" y2="${y(0)}" stroke="#b42318" stroke-dasharray="4 4"/>`;
+ series.forEach(s=>{h+=`<polyline points="${s.values.map((v,i)=>`${x(i)},${y(v)}`).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;s.values.forEach((v,i)=>h+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="${s.color}"><title>${esc(cats[i])}: ${fmt(v,2)}</title></circle>`)});svg.innerHTML=h
+}
+function barChart(svg,labels,values,colors){
+ const W=680,H=300,m={l:58,r:18,t:25,b:50},pw=W-m.l-m.r,ph=H-m.t-m.b,max=Math.max(...values,1)*1.18,bw=pw/labels.length*.55;let h="";
+ for(let j=0;j<5;j++){const yy=m.t+j*ph/4,val=max-j*max/4;h+=`<line x1="${m.l}" x2="${m.l+pw}" y1="${yy}" y2="${yy}" stroke="#e4ebef"/><text x="${m.l-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#6b7a84">${fmt(val,0)}</text>`}
+ labels.forEach((lab,i)=>{const cx=m.l+(i+.5)*pw/labels.length,hh=values[i]/max*ph,y=m.t+ph-hh;h+=`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${hh}" rx="3" fill="${colors[i]}"><title>${esc(lab)}: ${fmt(values[i],2)}</title></rect><text x="${cx}" y="${H-18}" text-anchor="middle" font-size="10" fill="#6b7a84">${esc(lab)}</text>`});svg.innerHTML=h
+}
+function stackedChart(svg,series,cats){
+ const W=680,H=300,m={l:58,r:18,t:23,b:42},pw=W-m.l-m.r,ph=H-m.t-m.b,totals=cats.map((_,i)=>series.reduce((s,x)=>s+x.values[i],0)),max=Math.max(...totals)*1.12,bw=pw/cats.length*.58;let h="";
+ for(let j=0;j<5;j++){const yy=m.t+j*ph/4,val=max-j*max/4;h+=`<line x1="${m.l}" x2="${m.l+pw}" y1="${yy}" y2="${yy}" stroke="#e4ebef"/><text x="${m.l-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#6b7a84">${fmt(val,0)}</text>`}
+ cats.forEach((c,i)=>{const cx=m.l+(i+.5)*pw/cats.length;let y0=m.t+ph;series.forEach(s=>{const hh=s.values[i]/max*ph;y0-=hh;h+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${hh}" fill="${s.color}"><title>${s.name} ${c}: ${fmt(s.values[i],2)}</title></rect>`});h+=`<text x="${cx}" y="${H-15}" text-anchor="middle" font-size="10" fill="#6b7a84">${esc(c)}</text>`});svg.innerHTML=h
+}
+
+
+function priceRows(ps,kind){
+ const sumShare = ps.reduce((a,p)=>a+Math.max(0,+p.share||0),0);
+ const rows = ps.map((p,i)=>`<tr>
+   <td>${p.name}</td>
+   <td><input class="slot-input input-soft pslot" data-kind="${kind}" data-i="${i}" type="text" value="${esc(p.slot||"")}"></td>
+   <td><input class="table-input input-accent pbase" data-kind="${kind}" data-i="${i}" type="number" step=".0001" min="0" value="${p.base}"></td>
+   <td><input class="table-input input-accent pshare" data-kind="${kind}" data-i="${i}" type="number" step=".1" min="0" max="100" value="${(+p.share*100).toFixed(1)}"></td>
+   <td><input class="table-input input-accent pcharge" data-kind="${kind}" data-i="${i}" type="number" step=".01" min="0" value="${p.charge}"></td>
+   <td>${fmt(p.base/state.efficiency,4)}</td>
+   <td>${fmt(p.charge-p.base/state.efficiency,4)}</td>
+ </tr>`).join("");
+ const calc = seasonCalc(ps);
+ const footer = `<tr class="footer-row">
+   <td>合计 / 加权</td>
+   <td style="text-align:right">—</td>
+   <td>${fmt(calc.base,6)}</td>
+   <td>${sumShare ? pct(sumShare,0) : "0%"}</td>
+   <td>${fmt(calc.charge,4)}</td>
+   <td style="text-align:right">—</td>
+   <td style="text-align:right">${sumShare ? "占比合计 100% ✓" : "请录入占比"}</td>
+ </tr>`;
+ return rows + footer;
+}
+function renderPricing(){
+ normalizeStateSchema();
+ $("swBody").innerHTML=priceRows(state.sw,"sw");
+ $("ssBody").innerHTML=priceRows(state.ss,"ss");
+ const p=annualPricing();
+ $("annualBase").textContent=fmt(p.base,6)+" 元/kWh";
+ $("annualCharge").textContent=fmt(p.charge,4)+" 元/kWh";
+ $("annualPurchase").textContent=fmt(p.purchase,4)+" 元/kWh";
+ $("annualMargin").textContent=fmt(p.margin,4)+" 元/kWh";
+ $("weightTotal").textContent=pct(p.weightTotal,1);
+ $("deepControls").style.display=state.deep?"grid":"none";
+ $("pricingSummaryBody").innerHTML = [
+   ["夏冬两季", p.sw.base, p.sw.charge, p.sw.charge-p.sw.base/state.efficiency],
+   ["春秋两季", p.ss.base, p.ss.charge, p.ss.charge-p.ss.base/state.efficiency],
+   ["全年加权", p.base, p.charge, p.margin]
+ ].map((x,j)=>`<tr ${j===2?'style="font-weight:800"':''}><td>${x[0]}</td><td>${fmt(x[1],6)}</td><td>${fmt(x[2],4)}</td><td>${fmt(x[3],4)}</td></tr>`).join("");
+ document.querySelectorAll(".pslot").forEach(el=>el.oninput=e=>{state[e.target.dataset.kind][+e.target.dataset.i].slot=e.target.value; saveLocal();});
+ document.querySelectorAll(".pbase").forEach(el=>el.oninput=e=>{state[e.target.dataset.kind][+e.target.dataset.i].base=clamp(e.target.value,0,5,0);refresh(false)});
+ document.querySelectorAll(".pshare").forEach(el=>el.oninput=e=>{state[e.target.dataset.kind][+e.target.dataset.i].share=clamp(e.target.value,0,100,0)/100;refresh(false)});
+ document.querySelectorAll(".pcharge").forEach(el=>el.oninput=e=>{state[e.target.dataset.kind][+e.target.dataset.i].charge=clamp(e.target.value,0,5,0);refresh(false)});
+}
+function renderDemandInput(){
+
+ let h="<thead><tr><th>指标</th>"+years.map(y=>`<th>${y}</th>`).join("")+"</tr></thead><tbody>";
+ const rows=[["运营天数","days"],["自卸车替代数","dump"],["牵引车替代数","tractor"],["装载机替代数","loader"],["年均社会车辆数","social"],["社会车单车日均补能量","socialDaily"]];
+ rows.forEach(([name,key])=>h+=`<tr><td>${name}</td>${state[key].map((v,i)=>`<td><input class="table-input input-accent annualInp" data-key="${key}" data-i="${i}" type="number" min="0" step="${key==="socialDaily"?10:1}" value="${v}"></td>`).join("")}</tr>`);
+ $("annualDemandInput").innerHTML=h+"</tbody>";document.querySelectorAll(".annualInp").forEach(el=>el.oninput=e=>{const k=e.target.dataset.key,i=+e.target.dataset.i;state[k][i]=Math.max(0,+e.target.value||0);if(k!=="socialDaily")state[k][i]=Math.round(state[k][i]);refresh(false)})
+}
+function renderDemand(){
+ const ds=years.map((_,i)=>demandData(i)),prudent=years.map((_,i)=>theoreticalCapacity(i)*state.prudent/1e4),suggested=ds.map((d,i)=>suggestedDemand(d.total,i));
+ $("demandSummaryBody").innerHTML=ds.map((d,i)=>{const util=d.total/theoreticalCapacity(i),status=suggested[i]>state.installed?"建议扩容":util>state.prudent?"扩容准备":"充足";return`<tr><td>${d.year}</td><td>${pct(state.dump[i]/state.dumpFleet,1)}</td><td>${pct(state.tractor[i]/state.tractorFleet,1)}</td><td>${pct(state.loader[i]/state.loaderFleet,1)}</td><td>${fmt((d.dump+d.tractor+d.loader)/1e4,2)}万kWh</td><td>${fmt(d.social/1e4,2)}万kWh</td><td>${fmt(d.total/1e4,2)}万kWh</td><td>${fmt(suggested[i],0)}kW</td><td>${pct(util,1)}</td><td class="${status==="充足"?"good":status==="扩容准备"?"warn":"bad"}">${status}</td></tr>`}).join("");
+ lineChart($("demandChart"),[{values:ds.map(d=>d.total/1e4),color:"#0f6aa3"},{values:prudent,color:"#7a9cae"}],years.map(String),{decimals:0});
+ lineChart($("vehicleChart"),[{values:state.dump,color:"#0f6aa3"},{values:state.tractor,color:"#6f8f54"},{values:state.loader,color:"#b47d38"}],years.map(String),{decimals:0});
+ stackedChart($("compositionChart"),[{name:"自卸车",values:ds.map(d=>d.dump/1e4),color:"#0f6aa3"},{name:"牵引车",values:ds.map(d=>d.tractor/1e4),color:"#6f8f54"},{name:"装载机",values:ds.map(d=>d.loader/1e4),color:"#b47d38"},{name:"社会车辆",values:ds.map(d=>d.social/1e4),color:"#7f7f7f"}],years.map(String));
+ lineChart($("powerChart"),[{values:suggested,color:"#0f6aa3"},{values:years.map(()=>state.installed),color:"#b42318"}],years.map(String),{decimals:0});
+}
+function renderCapacitySettings(){
+ let h="<thead><tr><th>年度</th>"+years.map(y=>`<th>${y}</th>`).join("")+"</tr></thead><tbody>";
+ h+=`<tr><td>固定约定需量（kW）</td>${state.contract.map((v,i)=>`<td><input class="table-input input-accent contractYr" data-i="${i}" type="number" min="0" step="100" value="${v}"></td>`).join("")}</tr>`;
+ h+=`<tr><td>容量费免除</td>${state.exempt.map((v,i)=>`<td style="text-align:center"><input class="exemptYr" data-i="${i}" type="checkbox" ${v?"checked":""}></td>`).join("")}</tr></tbody>`;
+ $("capacitySettingTable").innerHTML=h;document.querySelectorAll(".contractYr").forEach(el=>el.oninput=e=>{state.contract[+e.target.dataset.i]=Math.max(0,+e.target.value||0);refresh(false)});document.querySelectorAll(".exemptYr").forEach(el=>el.onchange=e=>{state.exempt[+e.target.dataset.i]=e.target.checked;refresh(false)})
+}
+
+function renderBalanceChart(svg,opt){
+ const W=680,H=320,m={l:62,r:22,t:24,b:48},pw=W-m.l-m.r,ph=H-m.t-m.b;
+ const {maxX,breakDemand,currentDemand,contractDemand,demandRate,capacityFeeAnnual,contractFeeAnnual,exempt} = opt;
+ const xs=[],steps=10;
+ for(let k=0;k<=steps;k++) xs.push(maxX*k/steps);
+ const maxDemandVals=xs.map(x=>exempt?0:x*demandRate*12/1e4);
+ const fixedCapacityVals=xs.map(()=>exempt?0:capacityFeeAnnual/1e4);
+ const contractVals=xs.map(()=>exempt?0:contractFeeAnnual/1e4);
+ const all=[...maxDemandVals,...fixedCapacityVals,...contractVals,1];
+ let ymin=0,ymax=Math.max(...all)*1.15;
+ const x=v=>m.l+(v/maxX)*pw;
+ const y=v=>m.t+(ymax-v)/(ymax-ymin)*ph;
+ let h="";
+ for(let j=0;j<5;j++){
+   const yy=m.t+j*ph/4,val=ymax-j*(ymax-ymin)/4;
+   h+=`<line x1="${m.l}" x2="${m.l+pw}" y1="${yy}" y2="${yy}" stroke="#e4ebef"/>`;
+   h+=`<text x="${m.l-8}" y="${yy+4}" text-anchor="end" font-size="10" fill="#6b7a84">${fmt(val,0)}</text>`;
+ }
+ for(let j=0;j<=steps;j+=2){
+   const xx=x(xs[j]);
+   h+=`<line x1="${xx}" x2="${xx}" y1="${m.t}" y2="${m.t+ph}" stroke="#f0f4f6"/>`;
+   h+=`<text x="${xx}" y="${H-17}" text-anchor="middle" font-size="10" fill="#6b7a84">${fmt(xs[j],0)}</text>`;
+ }
+ const poly=(vals,color)=>`<polyline points="${vals.map((v,i)=>`${x(xs[i])},${y(v)}`).join(" ")}" fill="none" stroke="${color}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>`;
+ h+=poly(maxDemandVals,"#0f6aa3");
+ h+=poly(fixedCapacityVals,"#2e7d32");
+ h+=poly(contractVals,"#b47d38");
+ if(!exempt){
+   const bd=Math.max(0,Math.min(maxX,breakDemand));
+   const cd=Math.max(0,Math.min(maxX,currentDemand));
+   const fd=capacityFeeAnnual/1e4;
+   h+=`<line x1="${x(bd)}" x2="${x(bd)}" y1="${m.t}" y2="${m.t+ph}" stroke="#b42318" stroke-dasharray="5 5"/>`;
+   h+=`<line x1="${x(cd)}" x2="${x(cd)}" y1="${m.t}" y2="${m.t+ph}" stroke="#7c3aed" stroke-dasharray="5 5"/>`;
+   h+=`<circle cx="${x(bd)}" cy="${y(fd)}" r="4.5" fill="#b42318"/>`;
+   h+=`<circle cx="${x(cd)}" cy="${y(currentDemand*demandRate*12/1e4)}" r="4.5" fill="#7c3aed"/>`;
+   h+=`<text x="${Math.min(x(bd)+7,W-155)}" y="${Math.max(y(fd)-9,14)}" font-size="10" fill="#b42318">均衡点 ${fmt(breakDemand,0)}kW</text>`;
+   h+=`<text x="${Math.min(x(cd)+7,W-155)}" y="${Math.max(y(currentDemand*demandRate*12/1e4)-9,14)}" font-size="10" fill="#7c3aed">当前需量 ${fmt(currentDemand,0)}kW</text>`;
+ }else{
+   h+=`<text x="${m.l+pw/2}" y="${m.t+ph/2}" text-anchor="middle" font-size="15" font-weight="700" fill="#0f6aa3">本年度容量费免除，三种模式实际容量费均为0</text>`;
+   h+=`<text x="${m.l+pw/2}" y="${m.t+ph/2+24}" text-anchor="middle" font-size="11" fill="#64727d">均衡点仅作为容量费恢复后的制度参考</text>`;
+ }
+ h+=`<text x="${m.l+pw/2}" y="${H-2}" text-anchor="middle" font-size="11" fill="#6b7a84">模型预测最大需量 / 建议正常需量（kW）</text>`;
+ svg.innerHTML=h;
+}
+
+function renderEconomics(){
+ const rows=calcAll(),i=years.indexOf(state.selectedYear),r=rows[i],p=annualPricing(),irrV=irr(rows.map(x=>x.flow)),pb=payback(rows),be=breakEvenCharge(i),breakDemand=state.fixedCapacity*state.capacityRate/state.demandRate;
+ const modes=[{n:"最大需量",b:r.suggested,u:"kW",f:capacityFee(i,r.suggested,"maxDemand")},{n:"固定容量",b:state.fixedCapacity,u:"kVA",f:capacityFee(i,r.suggested,"fixedCapacity")},{n:"固定约定需量",b:state.contract[i],u:"kW",f:capacityFee(i,r.suggested,"fixedContract")}],valid=modes.filter(x=>!(x.n==="固定约定需量"&&state.contract[i]<r.suggested)),low=valid.reduce((a,b)=>a.f<=b.f?a:b);
+ const k=[["分析年度税后利润",fmt(r.after/1e4,2)+" 万元",r.after>=0?"good":"bad","当前模式"],["经营现金流",fmt(r.operating/1e4,2)+" 万元",r.operating>=0?"good":"bad","税后利润+折旧"],["2035累计现金流",fmt(rows.at(-1).cum/1e4,2)+" 万元",rows.at(-1).cum>=0?"good":"bad","含初始投资"],["静态回收期",pb==null?"模型期未回本":fmt(pb,2)+" 年",pb==null?"bad":"good","2027–2035"],["模型期IRR",irrV==null?"无有效IRR":pct(irrV,1),irrV!=null&&irrV>0?"good":"bad","年度现金流"],["容量利用率",pct(r.util,1),r.util<state.prudent?"good":r.util<1?"warn":"bad","理论能力口径"],["建议正常需量",fmt(r.suggested,0)+" kW",r.suggested<=state.installed?"good":"bad","含安全余量"],["容需平衡点",fmt(breakDemand,0)+" kW","",pct(breakDemand/state.fixedCapacity,1)+"×固定容量"],["盈亏平衡收费",fmt(be,3)+" 元/kWh",p.charge>be?"good":"warn","分析年度"],["全年加权收费",fmt(p.charge,3)+" 元/kWh","","双季节加权"],["需求满足率",pct(r.satisfaction,1),r.satisfaction>=.999?"good":"warn","审慎能力"],["较低容量费模式",low.n,"good",fmt(low.f/1e4,2)+" 万元/年"]];
+ $("kpiGrid").innerHTML=k.map(x=>`<div class="kpi ${x[2]}"><div class="lab">${x[0]}</div><div class="val">${x[1]}</div><div class="note">${x[3]}</div></div>`).join("");
+ $("capacityCheck").innerHTML=r.suggested>state.installed?`<b>容量风险：</b>${state.selectedYear}年建议需量 ${fmt(r.suggested,0)}kW 已超过装机 ${fmt(state.installed,0)}kW。`:r.util>state.prudent?`<b>容量预警：</b>容量利用率 ${pct(r.util,1)} 高于审慎阈值 ${pct(state.prudent,0)}。`:`<b>容量校验：</b>建议需量 ${fmt(r.suggested,0)}kW，容量利用率 ${pct(r.util,1)}，现有装机可满足。`;
+ $("annualEconBody").innerHTML=rows.map(x=>`<tr class="${x.year===state.selectedYear?"base-row":""}"><td>${x.year}</td><td>${fmt(x.target/1e4,2)}万</td><td>${fmt(x.served/1e4,2)}万</td><td>${pct(x.satisfaction,1)}</td><td>${fmt(x.suggested,0)}kW</td><td>${fmt(x.fee/1e4,2)}万</td><td>${fmt(x.revenue/1e4,2)}万</td><td>${fmt(x.purchase/1e4,2)}万</td><td>${fmt((x.op+x.maint)/1e4,2)}万</td><td class="${x.after>=0?"good":"bad"}">${fmt(x.after/1e4,2)}万</td><td>${fmt(x.operating/1e4,2)}万</td><td class="${x.cum>=0?"good":"bad"}">${fmt(x.cum/1e4,2)}万</td></tr>`).join("");
+ $("seasonSummaryBody").innerHTML=[["夏冬季",p.sw.base,p.sw.charge,p.sw.base/state.efficiency,p.sw.charge-p.sw.base/state.efficiency],["春秋季",p.ss.base,p.ss.charge,p.ss.base/state.efficiency,p.ss.charge-p.ss.base/state.efficiency],["全年",p.base,p.charge,p.purchase,p.margin]].map((x,j)=>`<tr class="${j===2?"base-row":""}"><td>${x[0]}</td><td>${fmt(x[1],4)}</td><td>${fmt(x[2],4)}</td><td>${fmt(x[3],4)}</td><td class="${x[4]>=0?"good":"bad"}">${fmt(x[4],4)}</td></tr>`).join("");
+ $("capacityBody").innerHTML=modes.map(x=>{const invalid=x.n==="固定约定需量"&&state.contract[i]<r.suggested;return`<tr><td>${x.n}</td><td>${fmt(x.b,0)} ${x.u}</td><td>${fmt(x.f/1e4,2)}万元</td><td>${r.served?fmt(x.f/r.served,4):"—"}</td><td class="${invalid?"bad":x.n===low.n?"good":""}">${invalid?"合同基数不足":x.n===low.n?"费用较低":"费用较高"}</td></tr>`}).join("");
+ const maxDemandAnnual=capacityFee(i,r.suggested,"maxDemand");
+ const fixedCapacityAnnual=capacityFee(i,r.suggested,"fixedCapacity");
+ const feeGap=maxDemandAnnual-fixedCapacityAnnual;
+ const balanceGap=r.suggested-breakDemand;
+ const isExempt=state.exempt[i];
+ const bestMode=isExempt?"本年免容量费":(feeGap<0?"最大需量":feeGap>0?"固定容量":"基本持平");
+ $("balancePointMetric").textContent=fmt(breakDemand,0)+" kW";
+ $("currentDemandMetric").textContent=fmt(r.suggested,0)+" kW";
+ $("balanceGapMetric").textContent=(balanceGap>=0?"+":"")+fmt(balanceGap,0)+" kW";
+ $("balanceRatioMetric").textContent=pct(breakDemand/state.fixedCapacity,1);
+ $("fixedCapacityFeeMetric").textContent=fmt(fixedCapacityAnnual/1e4,2)+" 万元/年";
+ $("maxDemandFeeMetric").textContent=fmt(maxDemandAnnual/1e4,2)+" 万元/年";
+ $("capacityFeeGapMetric").textContent=(feeGap>=0?"+":"")+fmt(feeGap/1e4,2)+" 万元/年";
+ $("balanceBestModeMetric").textContent=bestMode;
+ $("balanceHint").innerHTML=isExempt
+   ? `当前分析年度 <b>${state.selectedYear}</b> 年容量费处于免除期，三种计费方式实际容量费均为0。按现行单价结构，容量费恢复后容需均衡点约为 <b>${fmt(breakDemand,0)}kW</b>（固定容量的 ${pct(breakDemand/state.fixedCapacity,1)}）。`
+   : r.suggested<breakDemand
+   ? `当前建议需量 <b>${fmt(r.suggested,0)}kW</b>，比均衡点低 <b>${fmt(Math.abs(balanceGap),0)}kW</b>。最大需量年容量费约 <b>${fmt(maxDemandAnnual/1e4,2)}万元</b>，比固定容量低约 <b>${fmt(Math.abs(feeGap)/1e4,2)}万元</b>，因此当前更适合 <b>最大需量模式</b>。`
+   : r.suggested>breakDemand
+   ? `当前建议需量 <b>${fmt(r.suggested,0)}kW</b>，比均衡点高 <b>${fmt(Math.abs(balanceGap),0)}kW</b>。固定容量年容量费约 <b>${fmt(fixedCapacityAnnual/1e4,2)}万元</b>，比最大需量低约 <b>${fmt(Math.abs(feeGap)/1e4,2)}万元</b>，因此当前更适合 <b>固定容量模式</b>。`
+   : `当前建议需量与容需均衡点基本重合，两种容量费模式成本接近，可结合合同灵活性选择。`;
+ renderBalanceChart($("balanceChart"),{
+   maxX:Math.max(state.fixedCapacity,state.contract[i],r.suggested,breakDemand)*1.25,
+   breakDemand,currentDemand:r.suggested,contractDemand:state.contract[i],
+   demandRate:state.demandRate,capacityFeeAnnual:fixedCapacityAnnual,
+   contractFeeAnnual:capacityFee(i,r.suggested,"fixedContract"),exempt:isExempt
+ });
+ $("balanceYearBody").innerHTML=rows.map((x,j)=>{
+   const bp=state.fixedCapacity*state.capacityRate/state.demandRate;
+   const md=capacityFee(j,x.suggested,"maxDemand"),fc=capacityFee(j,x.suggested,"fixedCapacity");
+   const gap=md-fc,diff=x.suggested-bp;
+   const judge=state.exempt[j]?"容量费免除":(gap<0?"最大需量更低":gap>0?"固定容量更低":"基本持平");
+   return `<tr class="${x.year===state.selectedYear?"base-row":""}">
+     <td>${x.year}</td><td>${fmt(x.suggested,0)}</td><td>${fmt(bp,0)}</td>
+     <td>${diff>=0?"+":""}${fmt(diff,0)}</td>
+     <td>${fmt(md/1e4,2)}</td><td>${fmt(fc/1e4,2)}</td>
+     <td class="${state.exempt[j]?"":gap<0?"good":"warn"}">${gap>=0?"+":""}${fmt(gap/1e4,2)}</td>
+     <td class="${state.exempt[j]?"":judge==="最大需量更低"?"good":"warn"}">${judge}</td>
+   </tr>`;
+ }).join("");
+ const costs=rows.map(x=>(x.purchase+x.fee+x.op+x.maint)/1e4);lineChart($("profitChart"),[{values:rows.map(x=>x.revenue/1e4),color:"#0f6aa3"},{values:costs,color:"#8899a6"},{values:rows.map(x=>x.after/1e4),color:"#2e7d32"}],years.map(String),{zeroLine:true});lineChart($("cashChart"),[{values:rows.map(x=>x.cum/1e4),color:"#0f6aa3"}],years.map(String),{zeroLine:true});barChart($("capacityChart"),modes.map(x=>x.n),modes.map(x=>x.f/1e4),["#0f6aa3","#6f8f54","#b47d38"]);lineChart($("utilChart"),[{values:rows.map(x=>x.util*100),color:"#0f6aa3"},{values:years.map(()=>state.prudent*100),color:"#b47d38"}],years.map(String),{decimals:0});
+ const contractWarn=state.contract[i]<r.suggested?`固定约定需量 ${fmt(state.contract[i],0)}kW 低于建议需量，存在超约/调整风险。`:"固定约定需量满足当前建议需量。",cashMsg=rows.at(-1).cum>=0?"2035累计现金流为正，模型期内回本。":`2035累计现金流 ${fmt(rows.at(-1).cum/1e4,2)}万元，模型期内尚未回本。`;
+ const balanceConclusion=state.exempt[i]
+   ? `该年度容量费免除，容需均衡点 ${fmt(breakDemand,0)}kW 仅作为容量费恢复后的参考。`
+   : `容需均衡点约 <b>${fmt(breakDemand,0)}kW</b>，当前负荷水平下 <b>${r.suggested<breakDemand?"最大需量":"固定容量"}</b>模式更具容量费成本优势。`;
+ $("conclusion").innerHTML=`<strong>结构性结论：</strong>${state.selectedYear}年需求约 <b>${fmt(r.target/1e4,2)}万kWh</b>，税后利润约 <b>${fmt(r.after/1e4,2)}万元</b>，建议需量 <b>${fmt(r.suggested,0)}kW</b>。${balanceConclusion}${contractWarn} 全年加权收费 <b>${fmt(p.charge,3)}元/kWh</b>，盈亏平衡收费 <b>${fmt(be,3)}元/kWh</b>。${cashMsg}`;
+}
+function renderSensitivity(){
+ const i=years.indexOf(state.sensYear),base=calcScenario(i),p=annualPricing(),range=+state.vehRange;
+ // rankings
+ const plusDump=Math.abs(profitDelta(i,{dump:state.dump[i]+1})),plusTr=Math.abs(profitDelta(i,{tractor:state.tractor[i]+1})),plusLd=Math.abs(profitDelta(i,{loader:state.loader[i]+1})),plusSoc=Math.abs(profitDelta(i,{social:state.social[i]+1}));
+ const chargeImpact=Math.max(Math.abs(calcScenario(i,{charge:p.charge+.05}).after-base.after),Math.abs(calcScenario(i,{charge:p.charge-.05}).after-base.after))/1e4;
+ const windowImpact=Math.max(Math.abs(calcScenario(i,{window:state.window+2}).after-base.after),Math.abs(calcScenario(i,{window:Math.max(4,state.window-2)}).after-base.after))/1e4;
+ const ranks=[["综合收费 ±0.05",chargeImpact],["有效窗口 ±2h",windowImpact],["+1装载机",plusLd],["+1自卸车",plusDump],["+1牵引车",plusTr],["+1社会车辆",plusSoc]].sort((a,b)=>b[1]-a[1]),mx=Math.max(...ranks.map(x=>x[1]),.001);
+ $("rankList").innerHTML=ranks.map(x=>`<div class="rank-item"><div>${x[0]}</div><div class="rank-bar"><span style="width:${x[1]/mx*100}%"></span></div><div class="rank-val">${fmt(x[1],2)}万元</div></div>`).join("");
+ // charge
+ const chargeXs=[-.10,-.05,-.02,0,.02,.05,.10].map(v=>p.charge+v),chargeYs=chargeXs.map(c=>calcScenario(i,{charge:c}).after/1e4);lineChart($("sensChargeChart"),[{values:chargeYs,color:"#0f6aa3"}],chargeXs.map(x=>x.toFixed(3)),{zeroLine:true});
+ // window
+ const windows=[8,9,10,11,12,13,14,15,16],windowYs=windows.map(w=>calcScenario(i,{window:w}).after/1e4);lineChart($("sensWindowChart"),[{values:windowYs,color:"#0f6aa3"}],windows.map(String),{zeroLine:true});
+ // vehicle curves
+ const deltas=[];for(let d=-range;d<=range;d++)deltas.push(d);
+ const vehSeries=[{key:"dump",color:"#0f6aa3"},{key:"tractor",color:"#6f8f54"},{key:"loader",color:"#b47d38"}].map(s=>({values:deltas.map(d=>calcScenario(i,{[s.key]:Math.max(0,state[s.key][i]+d)}).after/1e4),color:s.color}));
+ lineChart($("sensVehicleChart"),vehSeries,deltas.map(d=>(d>0?"+":"")+d),{zeroLine:true});
+ // social count
+ const counts=[];for(let c=0;c<=state.socialMax;c++)counts.push(c);const sy=counts.map(c=>calcScenario(i,{social:c}).after/1e4);lineChart($("sensSocialCountChart"),[{values:sy,color:"#0f6aa3"}],counts.map(String),{zeroLine:true});
+ // social energy
+ const low=Math.max(0,state.socialDaily[i]-state.socialEnergyRange),high=state.socialDaily[i]+state.socialEnergyRange,energies=[];for(let e=low;e<=high;e+=20)energies.push(e);const ey=energies.map(e=>calcScenario(i,{socialDaily:e}).after/1e4);lineChart($("sensSocialEnergyChart"),[{values:ey,color:"#0f6aa3"}],energies.map(String),{zeroLine:true});
+ // annual marginal
+ const dM=[],tM=[],lM=[],sM=[];
+ years.forEach((y,j)=>{dM.push(profitDelta(j,{dump:state.dump[j]+1}));tM.push(profitDelta(j,{tractor:state.tractor[j]+1}));lM.push(profitDelta(j,{loader:state.loader[j]+1}));sM.push(profitDelta(j,{social:state.social[j]+1}))});
+ lineChart($("annualMarginalChart"),[{values:dM,color:"#0f6aa3"},{values:tM,color:"#6f8f54"},{values:lM,color:"#b47d38"},{values:sM,color:"#7f7f7f"}],years.map(String),{zeroLine:true});
+ // detailed vehicle table
+ let vh="";[["自卸车","dump"],["牵引车","tractor"],["装载机","loader"]].forEach(([name,key])=>deltas.forEach(d=>{const qty=Math.max(0,state[key][i]+d),sc=calcScenario(i,{[key]:qty}),deltaDemand=d*(key==="dump"?state.dumpEnergy:key==="tractor"?state.tractorEnergy:state.loaderEnergy)*state.days[i]/1e4,dp=(sc.after-base.after)/1e4;vh+=`<tr class="${d===0?"base-row":""}"><td>${name}</td><td>${d>0?"+":""}${d}</td><td>${qty}</td><td>${fmt(deltaDemand,2)}万kWh</td><td>${fmt(sc.suggested,0)}kW</td><td class="${statusClass(dp)}">${fmt(dp,2)}万</td><td class="${sc.suggested>state.installed?"bad":"good"}">${sc.suggested>state.installed?"建议扩容":"充足"}</td></tr>`}));$("vehSensBody").innerHTML=vh;
+ // social table sampled counts
+ const sample=[0,3,5,8,state.socialMax].filter((v,idx,a)=>v<=state.socialMax&&a.indexOf(v)===idx).sort((a,b)=>a-b);$("socialSensBody").innerHTML=sample.map(c=>{const sc=calcScenario(i,{social:c}),dp=(sc.after-base.after)/1e4;return`<tr class="${c===state.social[i]?"base-row":""}"><td>${c}</td><td>${fmt(state.socialDaily[i],0)}kWh</td><td>${fmt(sc.total/1e4,2)}万kWh</td><td>${fmt(sc.suggested,0)}kW</td><td>${fmt(sc.after/1e4,2)}万</td><td class="${statusClass(dp)}">${fmt(dp,2)}万</td></tr>`}).join("");
+ // annual table
+ $("annualMarginalBody").innerHTML=years.map((y,j)=>{const dd=state.dumpEnergy*state.days[j]/1e4,td=state.tractorEnergy*state.days[j]/1e4,ld=state.loaderEnergy*state.days[j]/1e4,sd=state.socialDaily[j]*state.days[j]/1e4;return`<tr><td>${y}</td><td>${fmt(dd,2)}万kWh</td><td>${fmt(dM[j],2)}万</td><td>${fmt(td,2)}万kWh</td><td>${fmt(tM[j],2)}万</td><td>${fmt(ld,2)}万kWh</td><td>${fmt(lM[j],2)}万</td><td>${fmt(sd,2)}万kWh</td><td>${fmt(sM[j],2)}万</td></tr>`}).join("");
+ const top=ranks[0],loaderNote=plusLd>=plusDump&&plusLd>=plusTr?"装载机的单台边际电量和利润影响在三类自有车辆中最大。":"三类车辆的利润敏感度受当前容量费模式和需量取整影响。";
+ $("sensConclusion").innerHTML=`<strong>${state.sensYear}年敏感性结论：</strong>按当前参数，典型扰动中影响最大的因素为 <b>${top[0]}</b>，税后利润绝对影响约 <b>${fmt(top[1],2)}万元</b>。${loaderNote} 社会车辆每增加1台，按当年日均补能 ${fmt(state.socialDaily[i],0)}kWh/台·日计算，年新增需求约 <b>${fmt(state.socialDaily[i]*state.days[i]/1e4,2)}万kWh</b>，对应税后利润边际影响约 <b>${fmt(plusSoc,2)}万元</b>。敏感性结果随年度车辆规模、容量利用率和容量费模式动态变化。`;
+}
+function bind(){
+ $("swWeight").value=state.swWeight;$("ssWeight").value=state.ssWeight;$("efficiencyInput").value=state.efficiency;$("deepToggle").checked=state.deep;$("deepBase").value=state.deepBase;$("deepCharge").value=state.deepCharge;$("deepShare").value=state.deepShare;
+ $("dumpEnergy").value=state.dumpEnergy;$("tractorEnergy").value=state.tractorEnergy;$("loaderEnergy").value=state.loaderEnergy;$("dumpFleet").value=state.dumpFleet;$("tractorFleet").value=state.tractorFleet;$("loaderFleet").value=state.loaderFleet;$("installedInput").value=state.installed;$("prudentInput").value=state.prudent;$("safetyInput2").value=state.safety;$("stepInput").value=state.step;
+ $("yearSelect").innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join("");$("yearSelect").value=state.selectedYear;$("attainmentInput").value=state.attainment;$("windowInput").value=state.window;$("chargeAdjInput").value=state.chargeAdj;$("modeSelect").value=state.mode;$("selectedContractInput").value=state.contract[years.indexOf(state.selectedYear)];$("capacityInput").value=state.fixedCapacity;$("investmentInput").value=(state.investment/1e4).toFixed(2);$("demandRateInput").value=state.demandRate;$("capacityRateInput").value=state.capacityRate;$("taxInput").value=state.tax;$("opRateInput").value=state.opRate;$("deprInput").value=(state.depreciation/1e4).toFixed(2);$("maintInput").value=(state.maintenance/1e4).toFixed(2);
+ $("sensYearSelect").innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join("");$("sensYearSelect").value=state.sensYear;$("vehRangeSelect").value=state.vehRange;$("socialMaxInput").value=state.socialMax;$("socialEnergyRange").value=state.socialEnergyRange;
+}
+function refresh(rebuild=true){normalizeStateSchema();saveLocal();if(rebuild){bind();renderDemandInput();renderCapacitySettings()}renderPricing();renderDemand();renderEconomics();renderSensitivity()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")});
+$("resetBtn").onclick=()=>{state=JSON.parse(JSON.stringify(defaults));try{localStorage.removeItem("yzportDashboardV5")}catch(e){}refresh(true)};
+$("printBtn").onclick=()=>window.print();
+$("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="镇江港充电站_动态看板方案.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$("importFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{state={...JSON.parse(JSON.stringify(defaults)),...JSON.parse(rd.result)};refresh(true)}catch(err){alert("方案文件无法读取。")}};rd.readAsText(f,"utf-8")};
+const bindNum=(id,key,min,max,factor=1)=>$(id).oninput=e=>{state[key]=clamp(e.target.value,min,max,state[key]/factor)*factor;refresh(false)};
+$("swWeight").oninput=e=>{state.swWeight=clamp(e.target.value,0,1,.5);refresh(false)};$("ssWeight").oninput=e=>{state.ssWeight=clamp(e.target.value,0,1,.5);refresh(false)};$("efficiencyInput").oninput=e=>{state.efficiency=clamp(e.target.value,.5,1,.92);refresh(false)};$("deepToggle").onchange=e=>{state.deep=e.target.checked;refresh(false)};$("deepBase").oninput=e=>{state.deepBase=clamp(e.target.value,0,5,.3927);refresh(false)};$("deepCharge").oninput=e=>{state.deepCharge=clamp(e.target.value,0,5,.95);refresh(false)};$("deepShare").oninput=e=>{state.deepShare=clamp(e.target.value,0,.2,.005);refresh(false)};
+$("dumpEnergy").oninput=e=>{state.dumpEnergy=clamp(e.target.value,0,5000,200);refresh(false)};$("tractorEnergy").oninput=e=>{state.tractorEnergy=clamp(e.target.value,0,5000,140);refresh(false)};$("loaderEnergy").oninput=e=>{state.loaderEnergy=clamp(e.target.value,0,10000,640);refresh(false)};$("dumpFleet").oninput=e=>{state.dumpFleet=Math.max(1,+e.target.value||56);refresh(false)};$("tractorFleet").oninput=e=>{state.tractorFleet=Math.max(1,+e.target.value||34);refresh(false)};$("loaderFleet").oninput=e=>{state.loaderFleet=Math.max(1,+e.target.value||35);refresh(false)};$("installedInput").oninput=e=>{state.installed=clamp(e.target.value,100,10000,2880);refresh(false)};$("prudentInput").oninput=e=>{state.prudent=clamp(e.target.value,.5,1,.9);refresh(false)};$("safetyInput2").oninput=e=>{state.safety=clamp(e.target.value,0,.5,.15);refresh(false)};$("stepInput").oninput=e=>{state.step=clamp(e.target.value,10,1000,100);refresh(false)};
+$("yearSelect").onchange=e=>{state.selectedYear=+e.target.value;$("selectedContractInput").value=state.contract[years.indexOf(state.selectedYear)];refresh(false)};$("attainmentInput").oninput=e=>{state.attainment=clamp(e.target.value,.5,1.3,1);refresh(false)};$("windowInput").oninput=e=>{state.window=clamp(e.target.value,4,24,12);refresh(false)};$("chargeAdjInput").oninput=e=>{state.chargeAdj=clamp(e.target.value,-.5,.8,0);refresh(false)};$("modeSelect").onchange=e=>{state.mode=e.target.value;refresh(false)};$("selectedContractInput").oninput=e=>{state.contract[years.indexOf(state.selectedYear)]=Math.max(0,+e.target.value||0);refresh(false)};$("capacityInput").oninput=e=>{state.fixedCapacity=Math.max(0,+e.target.value||0);refresh(false)};$("investmentInput").oninput=e=>{state.investment=Math.max(0,+e.target.value||0)*1e4;refresh(false)};$("demandRateInput").oninput=e=>{state.demandRate=Math.max(0,+e.target.value||0);refresh(false)};$("capacityRateInput").oninput=e=>{state.capacityRate=Math.max(0,+e.target.value||0);refresh(false)};$("taxInput").oninput=e=>{state.tax=clamp(e.target.value,0,.6,.25);refresh(false)};$("opRateInput").oninput=e=>{state.opRate=clamp(e.target.value,0,.5,.08);refresh(false)};$("deprInput").oninput=e=>{state.depreciation=Math.max(0,+e.target.value||0)*1e4;refresh(false)};$("maintInput").oninput=e=>{state.maintenance=Math.max(0,+e.target.value||0)*1e4;refresh(false)};
+$("sensYearSelect").onchange=e=>{state.sensYear=+e.target.value;refresh(false)};$("vehRangeSelect").onchange=e=>{state.vehRange=+e.target.value;refresh(false)};$("socialMaxInput").oninput=e=>{state.socialMax=Math.round(clamp(e.target.value,3,30,10));refresh(false)};$("socialEnergyRange").onchange=e=>{state.socialEnergyRange=+e.target.value;refresh(false)};
+refresh(true);
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
